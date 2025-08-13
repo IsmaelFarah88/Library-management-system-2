@@ -1,179 +1,256 @@
-# Library Management System - Detailed Code Walkthrough
+# Library Management System: An In-Depth Technical Guide
 
 ## 📜 Project Overview
 
-This project is a comprehensive, command-line based Library Management System written entirely in the C programming language. It serves as a digital assistant for a librarian, capable of managing books, members, and the borrowing/returning process. The system is designed to be robust, user-friendly, and secure, featuring a clean, color-coded interface and data persistence through local files.
+This document provides a detailed technical breakdown of the C-based Library Management System. Its purpose is to explain the architecture, core concepts, and function-by-function logic in a way that is accessible to both new developers and those unfamiliar with C.
 
-## ✨ Key Features
-
-- ✅ **Dual User Roles:** A powerful **Librarian (Admin)** role with full control and a standard **Member** role for borrowing books.
-- ✅ **Comprehensive Management:** Full CRUD (Create, Read, Update, Delete) operations for books and members.
-- ✅ **Transaction System:** Tracks every borrowed and returned book, including dates and fines.
-- ✅ **Enhanced Security:**
-    - Password masking (`*******`).
-    - Password strength requirements for both user roles.
-    - Forced password change on first login.
-    - Account lockout after 3 failed login attempts.
-    - Automatic session timeout after 10 minutes of inactivity.
-- ✅ **Automated Fine Calculation:** Automatically calculates and applies fines for overdue books.
-- ✅ **Elegant User Interface:**
-    - A clean, color-coded console interface for better readability.
-    - **Pagination** for browsing long lists (e.g., all books) without clutter.
-    - Screen clearing for a fresh, app-like experience in each menu.
-- ✅ **Data Persistence & Integrity:**
-    - All data is saved to `.txt` files, ensuring it's not lost when the program closes.
-    - **File locking** is implemented to prevent data corruption from concurrent access.
-
----
-
-## 🏗️ Project Structure
-
-The entire logic is contained within `library_system.c`. The program interacts with three data files that it creates automatically:
-
-- `books.txt`: Stores the library's entire book catalog.
-- `members.txt`: Stores user account information.
-- `transactions.txt`: A ledger of all borrowing and return activities.
-
----
+The system is a robust, command-line application that simulates a real-world library's operations, featuring user roles, data persistence, and a modern, interactive user interface.
 
 ## 🧠 Core Concepts Explained
 
-Before diving into the code, let's explain some key concepts in simple terms.
+Before we dissect the code, understanding these foundational concepts is crucial.
 
-### Data Structures (`struct`)
-Think of a `struct` as a **blueprint or a template**. For example, a `struct Book` defines that every book must have an ID, a title, an author, etc. It's like an empty contact card template waiting to be filled out for each specific book.
+### 1. Data Structures (`struct`)
 
-### Dynamic Memory (`realloc`)
-Imagine your program has a folder to store book records, and it can only hold 10 records. What happens when you add the 11th book? Instead of crashing, we use `realloc`. This function is like a magic helper that:
-1.  Finds a bigger folder.
-2.  Copies all the old records into the new, bigger folder.
-3.  Throws away the old, small folder.
-This allows our program to handle any number of books or members without knowing the exact number in advance.
+**What it is:** A `struct` is a custom data type that groups together related variables under a single name.
 
-### Security: Password Encryption (Caesar Cipher)
-Passwords are not stored as plain text. They are "scrambled" using a simple method called a **Caesar Cipher**, which shifts each letter by 3 places (e.g., `A` becomes `D`, `p` becomes `s`). This means if someone snoops into the `members.txt` file, they won't see the actual passwords.
+**Analogy:** Think of a `struct Book` as a blueprint for a library index card. The blueprint specifies that every card must have fields for "ID," "Title," "Author," etc. The `struct` itself is the empty template; an actual book variable is a filled-out card.
 
-> **⚠️ SECURITY WARNING:** The Caesar Cipher is used here for educational purposes only because it's easy to understand. **It is NOT secure.** For any real-world application, a strong, one-way **hashing algorithm** (like SHA-256 or Argon2) must be used instead.
+**Code Snippet:**
+```c
+typedef struct {
+    int id;
+    char title[100];
+    char author[50];
+    char category[30];
+    int quantity;
+    int available;
+} Book;
+```
+
+### 2. Dynamic Memory Allocation (`realloc`)
+
+**What it is:** A way for the program to request more memory from the operating system while it's running.
+
+**Analogy:** Imagine your program has an array (a shelf) that can only hold 10 books. When you try to add the 11th book, `realloc` acts as a helper. It finds a bigger shelf, moves all 10 books to it, and then gives you space for the 11th. This allows our library to grow to any size without crashing.
+
+**Code Snippet:**
+```c
+if (book_count >= book_capacity) {
+    // If the shelf is full, double its size
+    book_capacity = (book_capacity == 0) ? 10 : book_capacity * 2;
+    // Ask for a new, bigger shelf
+    books = realloc(books, book_capacity * sizeof(Book));
+}
+```
+
+### 3. File I/O and Data Persistence
+
+**What it is:** The process of reading from and writing to files on the disk. This is how the program remembers data after it's closed.
+
+**Analogy:** The program uses three `.txt` files as its "digital notebooks." When the program starts, it reads these notebooks to load the data. Whenever a change is made (like adding a book), it erases the relevant notebook and rewrites it with the updated information.
+
+**Code Snippet (Data Format in `books.txt`):**
+```
+ID,Title,Author,Category,Total,Available
+1,The C Programming Language,Kernighan & Ritchie,Programming,5,4
+```
+
+### 4. Security: File Locking
+
+**What it is:** A mechanism to prevent multiple processes from writing to the same file at the same time, which can corrupt data. This is known as a "race condition."
+
+**Analogy:** Think of it as a "talking stick" for files. When a function wants to write to `books.txt`, it first grabs the "lock" (the talking stick). While it holds the lock, no other part of the system can write to that file. Once it's finished writing, it releases the lock, allowing others to access it.
+
+**Code Snippet:**
+```c
+void save_books() {
+    FILE *file = fopen(BOOK_FILE, "w");
+    // ... error checking ...
+    
+    lock_file(file); // Grab the lock
+    
+    // Loop and write all books to the file
+    for (int i = 0; i < book_count; i++) {
+        fprintf(file, ...);
+    }
+    
+    unlock_file(file); // Release the lock
+    fclose(file);
+}
+```
 
 ---
 
 ## ⚙️ Detailed Function Breakdown
 
-Here is a line-by-line explanation of how the major parts of the code work.
+Here is a step-by-step walkthrough of the most important functions in the system.
 
-### `main()` function
-This is the heart of the program's execution flow.
-1.  `enable_virtual_terminal_processing()`: A special function for Windows to ensure the color codes work correctly.
-2.  `initialize_system()`: Loads all data from the `.txt` files into memory. If it's the first time running, it creates a default `admin` account.
-3.  **Main Loop (`do-while`)**: This loop keeps the program running.
-    - It `clear_screen()` to provide a clean slate.
-    - It prints the main menu (Login or Exit).
-    - It waits for the user's choice.
-    - If `1`, it calls the `login()` function.
-    - If `2`, it prints a goodbye message and the loop terminates.
-4.  **Cleanup**: Before exiting, it `free()`s all the dynamic memory that was allocated, preventing memory leaks.
+### Program Entry Point: `main()`
 
-### UI and Utility Functions
+The `main` function is the "director" of the entire program. Its job is simple and linear.
 
-- **`clear_screen()`**: Issues a system command (`cls` for Windows, `clear` for Linux/macOS) to wipe the console clean.
-- **`press_enter_to_continue()`**: Pauses the program and waits for the user to press Enter. This is crucial for allowing users to read messages before the screen is cleared.
-- **`get_string_input()` / `get_int_input()`**: These are "safe" input functions. They read the entire line of user input to prevent issues where leftover characters in the input buffer could break the next input request.
-- **`get_masked_password()`**: This function is responsible for printing `*` instead of the actual characters when a user types their password. It uses platform-specific libraries for this.
+**How it works:**
+1.  **`enable_virtual_terminal_processing()`**: This is a Windows-specific function to ensure that the ANSI color codes (which make the text colored) are processed correctly. It does nothing on other systems.
+2.  **`initialize_system()`**: This is a crucial first step. It calls the `load_*()` functions to read all data from the `.txt` files and populate the in-memory arrays. If it detects that the `members.txt` file is empty, it creates the default admin account.
+3.  **The Main Loop (`do-while`)**: This loop is what keeps the program running and the main menu visible.
+    - It clears the screen (`clear_screen()`).
+    - It prints the main menu options: Login or Exit.
+    - It waits for user input. If the user chooses to log in, it calls the `login()` function.
+    - The loop only terminates when the user selects '2' (Exit).
+4.  **Cleanup**: Before the program fully exits, it calls `free()` on all the dynamic arrays (`books`, `members`, `transactions`). This returns the memory to the operating system, which is good practice to prevent memory leaks.
 
-### File I/O and Locking
+**Code Snippet:**
+```c
+int main() {
+    enable_virtual_terminal_processing();
+    initialize_system();
+    int choice;
+    do {
+        clear_screen();
+        // ... print main menu ...
+        choice = get_int_input("\nChoose an option: ");
+        switch (choice) {
+            case 1:
+                login();
+                break;
+            case 2:
+                // ... print goodbye message ...
+                break;
+            // ...
+        }
+    } while (choice != 2);
+    
+    // Cleanup
+    free(books);
+    free(members);
+    free(transactions);
+    return 0;
+}
+```
 
-- **`load_*()` functions (e.g., `load_books()`)**:
-    1.  Opens the corresponding `.txt` file for reading (`"r"`).
-    2.  Loops through each line of the file.
-    3.  Uses `fscanf()` to parse the comma-separated values from the line and store them in a temporary `struct`.
-    4.  Checks if our in-memory array has enough space. If not, it calls `realloc` to get more memory (the magic expandable folder).
-    5.  Copies the temporary `struct` into the main array.
-- **`save_*()` functions (e.g., `save_books()`)**:
-    1.  Opens the corresponding `.txt` file for writing (`"w"`), which erases the old content.
-    2.  **`lock_file()`**: Places an exclusive lock on the file. This tells the operating system, "Hey, I'm writing to this file. Don't let anyone else touch it until I'm done!" This prevents data corruption.
-    3.  Loops through the in-memory array (e.g., `books`).
-    4.  Uses `fprintf()` to write the data of each `struct` to the file in the correct comma-separated format.
-    5.  **`unlock_file()`**: Releases the lock, allowing other processes to access the file again.
+### UI Function: `get_masked_password()`
 
-### Librarian (Admin) Functions
+This function provides the `******` effect when typing passwords.
 
-- **`list_all_books()`**:
-    1.  Initializes pagination variables (`current_page`, `total_pages`).
-    2.  Enters a `do-while` loop to handle page navigation.
-    3.  Inside the loop, it calls `display_books_paginated()` to show only the items for the current page.
-    4.  It then prompts the user for navigation input (`N` for next, `P` for previous, `Q` to quit).
-    5.  The loop continues until the user presses `Q`.
-- **`add_book()`**:
-    1.  Clears the screen and prints a nice header.
-    2.  Checks if the `books` array needs to be expanded and calls `realloc` if necessary.
-    3.  Prompts the admin for the new book's details (title, author, etc.).
-    4.  Assigns a new, unique `id`.
-    5.  Adds the new book `struct` to the `books` array.
-    6.  Calls `save_books()` to write the entire updated array to disk.
-    7.  Prints a green success message.
+**How it works:**
+- It uses preprocessor directives (`#ifdef _WIN32`) to run different code depending on the operating system.
+- **On Windows:** It uses the `_getch()` function from `conio.h`. This function reads a single character from the keyboard *without* displaying it on the screen. The function then manually prints a `*` in its place.
+- **On Linux/macOS:** It uses the `termios` library. It gets the current terminal settings, disables the `ECHO` flag (which is responsible for displaying typed characters), reads the password, and then immediately re-enables the `ECHO` flag to return the terminal to its normal state.
 
-### Member Functions
+**Code Snippet:**
+```c
+void get_masked_password(const char *prompt, char *buffer, int size) {
+    printf("%s", prompt);
+    fflush(stdout);
+#ifdef _WIN32
+    int i = 0;
+    char ch;
+    // Loop until Enter is pressed
+    while (i < size - 1 && (ch = _getch()) != '\r') {
+        // ... handle backspace ...
+        buffer[i++] = ch;
+        printf("*"); // Manually print the asterisk
+    }
+    buffer[i] = '\0';
+#else
+    // Linux/macOS implementation using termios
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ECHO); // Turn off echoing
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-- **`borrow_book(int member_id)`**:
-    1.  Uses the pagination system to display available books, allowing the member to browse.
-    2.  The user can enter a book ID to borrow it.
-    3.  The function finds the book by its ID.
-    4.  It checks if the book is available (`book->available > 0`).
-    5.  If yes, it creates a new `Transaction` record with the current date, a due date (7 days from now), and the book/member IDs.
-    6.  It decrements the book's `available` count by 1.
-    7.  It calls `save_books()` and `save_transactions()` to persist the changes.
-- **`return_book(int member_id)`**:
-    1.  Finds and displays a list of only the books the current member has borrowed but not yet returned.
-    2.  Asks the user to enter the transaction ID of the book they wish to return.
-    3.  Finds the corresponding transaction record.
-    4.  Sets the `return_date` to the current time.
-    5.  **Fine Calculation**: It compares the `return_date` with the `due_date`. If the return is late, it calculates the number of overdue days and multiplies it by `FINE_PER_DAY` to get the fine.
-    6.  It increments the book's `available` count by 1.
-    7.  Calls `save_books()` and `save_transactions()`.
+    fgets(buffer, size, stdin); // Read the password
 
-### Core Logic
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Turn echoing back on
+#endif
+    printf("\n");
+}
+```
 
-- **`login()`**:
-    1.  Asks the user if they are an Admin or a Member.
-    2.  Prompts for username and password (masked).
-    3.  Enters a loop that allows for `MAX_LOGIN_ATTEMPTS`.
-    4.  It finds the member by username in the `members` array.
-    5.  It **decrypts** the stored password using `caesar_decrypt()`.
-    6.  It compares the decrypted password with the one the user entered.
-    7.  **On success**: It prints a success message, checks `is_first_login` to force a password change if needed, and then calls the appropriate menu (`admin_menu()` or `member_menu()`).
-    8.  **On failure**: It prints a red error message and decrements the attempt counter.
-- **`change_password()`**:
-    1.  Prompts the user to enter a new password, checking it against the required complexity rules (`is_strong_admin_password` or `is_valid_member_password`).
-    2.  Asks the user to confirm the new password.
-    3.  If they match, it **encrypts** the new password with `caesar_encrypt()` and saves it.
+### Core Logic: Pagination in `list_all_books()`
+
+This function displays a long list of books in user-friendly pages.
+
+**How it works:**
+1.  **Calculate Pages**: It first calculates `total_pages` based on the number of books and `ITEMS_PER_PAGE`.
+2.  **Navigation Loop (`do-while`)**: The function enters a loop that continues until the user chooses to quit (`Q`).
+3.  **Display Current Page**: Inside the loop, it calls a helper function, `display_books_paginated()`. This helper function:
+    - Calculates the `start` and `end` index for the current page (e.g., for page 2, it would display items 10 through 19).
+    - Loops from `start` to `end` and prints only the books in that range.
+4.  **Get User Input**: After displaying the page, it prompts the user for a navigation command (`N`, `P`, or `Q`).
+5.  **Update Page**: Based on the input, it either increments or decrements the `current_page` variable, and the loop repeats, displaying the new page.
+
+**Code Snippet:**
+```c
+void list_all_books() {
+    int current_page = 0;
+    int total_pages = (book_count + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE;
+    // ...
+    char choice;
+    do {
+        // This function prints the header and the items for the current page
+        display_books_paginated(current_page);
+        
+        printf("Enter (N)ext, (P)revious, or (Q)uit to menu: ");
+        choice = getchar();
+        clear_input_buffer();
+        
+        switch (tolower(choice)) {
+            case 'n':
+                if (current_page < total_pages - 1) current_page++;
+                break;
+            case 'p':
+                if (current_page > 0) current_page--;
+                break;
+        }
+    } while (tolower(choice) != 'q');
+}
+```
+
+### Core Logic: Fine Calculation in `return_book()`
+
+This function handles the logic for returning a book and calculating any overdue fines.
+
+**How it works:**
+1.  **Identify Book**: It first finds the specific transaction for the book being returned.
+2.  **Set Return Date**: It records the exact moment of return by setting `trans->return_date = time(NULL);`.
+3.  **Check for Overdue**: This is the key step. It compares the return date with the due date.
+    ```c
+    if (trans->return_date > trans->due_date) {
+        // ...
+    }
+    ```
+4.  **Calculate Fine**: If the book is overdue:
+    - `difftime()`: This function calculates the difference between two `time_t` values in seconds.
+    - The seconds are converted to days. We add `+ 1` to ensure any part of a day counts as a full day late.
+    - The number of late days is multiplied by `FINE_PER_DAY` to calculate the final fine.
+    - A yellow-colored message is displayed to the user with the fine amount.
+5.  **Update Inventory**: The book's `available` count is incremented by 1.
+6.  **Save Changes**: `save_books()` and `save_transactions()` are called to write the updated data to the disk.
+
+**Code Snippet:**
+```c
+if (trans->return_date > trans->due_date) {
+    // Calculate the difference in seconds
+    double seconds_late = difftime(trans->return_date, trans->due_date);
+    
+    // Convert seconds to days (86400 seconds in a day)
+    int days_late = (int)(seconds_late / (60 * 60 * 24)) + 1;
+    
+    // Calculate the fine
+    trans->fine = days_late * FINE_PER_DAY;
+    
+    printf(COLOR_YELLOW "\nThe book is overdue! A fine of $%.2f has been charged.\n" COLOR_RESET, trans->fine);
+}
+```
 
 ---
 
-## 🚀 How to Compile and Run
+## 🚀 Future Work & Improvements
 
-### Requirements
-- A C compiler, such as GCC. (Comes with Linux/macOS, can be installed on Windows via [MinGW](https://www.mingw-w64.org/)).
-
-### Compilation
-Open a terminal in the project directory and run the following command:
-```bash
-gcc -o library_system library_system.c
-```
-*(On some systems, you might need `-lm` if you get math library errors: `gcc -o library_system library_system.c -lm`)*
-
-### Execution
-- On Linux or macOS:
-  ```bash
-  ./library_system
-  ```
-- On Windows:
-  ```bash
-  library_system.exe
-  ```
-
-### First Use
-The first time you run the program, it will create a default admin account for you:
-- **Username:** `admin`
-- **Password:** `AdminPassword123!`
-
-You will be required to change this password immediately upon your first login.
+While the system is fully functional, here are some potential areas for improvement:
+- **Upgrade to a Database:** Migrating from `.txt` files to **SQLite** would provide more robust, efficient, and reliable data storage.
+- **Enhanced Security:** Replace the educational Caesar Cipher with a strong hashing algorithm like **SHA-256** or **Argon2** with random salts for proper password security.
+- **Code Modularity:** Split the code into multiple `.c` and `.h` files (e.g., `book.c`, `member.c`, `ui.c`) for better organization and maintainability.
