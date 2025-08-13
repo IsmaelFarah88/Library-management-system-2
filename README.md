@@ -1,256 +1,287 @@
-# Library Management System: An In-Depth Technical Guide
+# Library Management System: A Line-by-Line Code Analysis
 
-## 📜 Project Overview
+## 📜 Document Purpose
 
-This document provides a detailed technical breakdown of the C-based Library Management System. Its purpose is to explain the architecture, core concepts, and function-by-function logic in a way that is accessible to both new developers and those unfamiliar with C.
+This document provides an exhaustive, line-by-line technical breakdown of the C-based Library Management System. Its goal is to demystify the code, making it understandable for developers, students, and anyone curious about how its features are implemented. We will explore everything from the foundational building blocks to the core application logic.
 
-The system is a robust, command-line application that simulates a real-world library's operations, featuring user roles, data persistence, and a modern, interactive user interface.
+---
 
-## 🧠 Core Concepts Explained
+## 🏛️ Part 1: The Building Blocks (Headers, Globals, Structs)
 
-Before we dissect the code, understanding these foundational concepts is crucial.
+Before any function runs, the program sets up its environment and defines its data templates.
 
-### 1. Data Structures (`struct`)
+### Headers (`#include`)
 
-**What it is:** A `struct` is a custom data type that groups together related variables under a single name.
+This is the first section of the code. Each `#include` directive tells the compiler to bring in a "toolbox" of pre-written functions.
 
-**Analogy:** Think of a `struct Book` as a blueprint for a library index card. The blueprint specifies that every card must have fields for "ID," "Title," "Author," etc. The `struct` itself is the empty template; an actual book variable is a filled-out card.
+```c
+#include <stdio.h>      // Standard Input/Output: For functions like printf() and fopen().
+#include <stdlib.h>     // Standard Library: For memory allocation (realloc, free) and system("cls").
+#include <string.h>     // String Library: For working with text (strcmp, strcpy, strstr).
+#include <time.h>       // Time Library: For getting the current time (time()) for transactions.
+#include <ctype.h>      // Character Type Library: For functions like tolower() and isdigit().
 
-**Code Snippet:**
+#ifdef _WIN32
+#include <conio.h>      // Windows-specific: For _getch() used in masked password input.
+#include <windows.h>    // Windows-specific: For color support and file locking.
+#include <io.h>         // Windows-specific: For getting file handles for locking.
+#else
+#include <termios.h>    // Linux/macOS-specific: For masked password input.
+#include <unistd.h>     // Linux/macOS-specific: General POSIX functions.
+#include <fcntl.h>      // Linux/macOS-specific: For file control and locking.
+#endif
+```
+
+### Data Structures (`struct`)
+
+These are the custom "blueprints" for our data.
+
 ```c
 typedef struct {
-    int id;
-    char title[100];
-    char author[50];
-    char category[30];
-    int quantity;
-    int available;
+    int id;             // A unique number for each book.
+    char title[100];    // A string to hold the book's title.
+    // ... and so on for author, category, etc.
 } Book;
+
+typedef struct {
+    int id;             // A unique number for each member.
+    char name[50];      // The member's username.
+    char email[100];    // The member's email address.
+    char encrypted_password[256]; // The scrambled password.
+    int is_first_login; // A flag (1 for yes, 0 for no) to force password change.
+} Member;
+
+// The Transaction struct is defined similarly.
 ```
 
-### 2. Dynamic Memory Allocation (`realloc`)
+### Global Variables
 
-**What it is:** A way for the program to request more memory from the operating system while it's running.
+These variables are accessible from anywhere in the code. They hold the application's "state" (all the data currently loaded in memory).
 
-**Analogy:** Imagine your program has an array (a shelf) that can only hold 10 books. When you try to add the 11th book, `realloc` acts as a helper. It finds a bigger shelf, moves all 10 books to it, and then gives you space for the 11th. This allows our library to grow to any size without crashing.
-
-**Code Snippet:**
 ```c
-if (book_count >= book_capacity) {
-    // If the shelf is full, double its size
-    book_capacity = (book_capacity == 0) ? 10 : book_capacity * 2;
-    // Ask for a new, bigger shelf
-    books = realloc(books, book_capacity * sizeof(Book));
+Book *books = NULL;          // A pointer that will point to our array of books in memory. Starts as NULL (empty).
+int book_count = 0;          // How many books are currently loaded.
+int book_capacity = 0;       // How much space we have allocated for books (our "shelf size").
+int next_book_id = 1;        // A counter to ensure every new book gets a unique ID.
+// The same pattern is repeated for members and transactions.
+```
+
+---
+
+## 🛠️ Part 2: The Foundation - Utility & UI Functions
+
+These are the helper functions that make the rest of the code cleaner and more powerful.
+
+### `void clear_screen()`
+
+**Purpose:** To wipe the console clean, creating an app-like feel.
+
+```c
+void clear_screen() {
+#ifdef _WIN32
+    system("cls"); // If on Windows, run the "cls" command.
+#else
+    system("clear"); // Otherwise (Linux/macOS), run the "clear" command.
+#endif
 }
 ```
+1.  **`#ifdef _WIN32`**: A preprocessor directive. It checks if the code is being compiled on Windows.
+2.  **`system("cls")`**: Executes the command-line command `cls`, which clears the screen on Windows.
+3.  **`#else`**: If the condition above is false.
+4.  **`system("clear")`**: Executes the `clear` command, which does the same on Linux and macOS.
 
-### 3. File I/O and Data Persistence
+### `void press_enter_to_continue()`
 
-**What it is:** The process of reading from and writing to files on the disk. This is how the program remembers data after it's closed.
+**Purpose:** To pause the program until the user is ready to proceed. This is essential for letting the user read messages before the screen is cleared.
 
-**Analogy:** The program uses three `.txt` files as its "digital notebooks." When the program starts, it reads these notebooks to load the data. Whenever a change is made (like adding a book), it erases the relevant notebook and rewrites it with the updated information.
-
-**Code Snippet (Data Format in `books.txt`):**
+```c
+void press_enter_to_continue() {
+    printf(COLOR_YELLOW "\n\nPress Enter to continue..." COLOR_RESET);
+    getchar();
+}
 ```
-ID,Title,Author,Category,Total,Available
-1,The C Programming Language,Kernighan & Ritchie,Programming,5,4
+1.  **`printf(...)`**: Prints the "Press Enter..." message in yellow.
+2.  **`getchar()`**: This is the key. It waits and reads a single character from the keyboard. The program will not proceed until a character is entered (in this case, when the user hits the Enter key).
+
+### `int get_int_input(const char *prompt)`
+
+**Purpose:** To safely get an integer from the user, preventing crashes from invalid text input.
+
+```c
+int get_int_input(const char *prompt) {
+    int value;
+    char buffer[100];
+    while (1) { // Loop forever until a valid number is entered.
+        printf("%s", prompt); // Display the prompt message (e.g., "Enter your choice: ").
+        if (fgets(buffer, sizeof(buffer), stdin) && sscanf(buffer, "%d", &value) == 1) {
+            return value; // If successful, exit the loop and return the integer.
+        }
+        printf(COLOR_RED "Invalid input. Please enter an integer.\n" COLOR_RESET);
+    }
+}
 ```
+1.  **`while (1)`**: Creates an infinite loop. The only way to exit is with the `return` statement.
+2.  **`fgets(...)`**: Reads a full line of text from the user's input into `buffer`. This is safer than `scanf` because it handles extra characters gracefully.
+3.  **`sscanf(buffer, "%d", &value) == 1`**: This is the magic. It tries to "scan" the text in `buffer` for an integer (`%d`). If it successfully finds exactly one integer, it returns `1`.
+4.  **`return value`**: If `sscanf` was successful, the function immediately stops and returns the extracted integer.
+5.  **`printf(...)`**: If `sscanf` failed (e.g., the user typed "abc"), it prints an error message, and the loop repeats, asking for input again.
 
-### 4. Security: File Locking
+---
 
-**What it is:** A mechanism to prevent multiple processes from writing to the same file at the same time, which can corrupt data. This is known as a "race condition."
+## 🗃️ Part 3: Data Management - File I/O and Locking
 
-**Analogy:** Think of it as a "talking stick" for files. When a function wants to write to `books.txt`, it first grabs the "lock" (the talking stick). While it holds the lock, no other part of the system can write to that file. Once it's finished writing, it releases the lock, allowing others to access it.
+This section details how the program remembers data between sessions.
 
-**Code Snippet:**
+### `void save_books()` (Example for all `save_*` functions)
+
+**Purpose:** To write the entire array of books from memory to the `books.txt` file.
+
 ```c
 void save_books() {
+    // 1. Open the file in "write" mode. This erases the old file.
     FILE *file = fopen(BOOK_FILE, "w");
-    // ... error checking ...
+    if (!file) { perror("Could not open books file"); return; }
     
-    lock_file(file); // Grab the lock
+    // 2. Lock the file to prevent other processes from writing to it.
+    lock_file(file);
     
-    // Loop and write all books to the file
+    // 3. Loop through every book currently in the 'books' array.
     for (int i = 0; i < book_count; i++) {
-        fprintf(file, ...);
+        // 4. Write the book's data to the file in a comma-separated format.
+        fprintf(file, "%d,%s,%s,%s,%d,%d\n", 
+                books[i].id, books[i].title, books[i].author, 
+                books[i].category, books[i].quantity, books[i].available);
     }
     
-    unlock_file(file); // Release the lock
+    // 5. Release the lock.
+    unlock_file(file);
+    
+    // 6. Close the file to save the changes.
     fclose(file);
 }
 ```
 
+### `void load_books()` (Example for all `load_*` functions)
+
+**Purpose:** To read the data from `books.txt` and load it into the `books` array in memory when the program starts.
+
+```c
+void load_books() {
+    // 1. Open the file in "read" mode.
+    FILE *file = fopen(BOOK_FILE, "r");
+    if (!file) return; // If the file doesn't exist (e.g., first run), just exit.
+
+    Book temp; // 2. A temporary variable to hold the data for one book.
+
+    // 3. Loop as long as we can successfully read a full line that matches the format.
+    while (fscanf(file, "%d,%99[^,],%49[^,],%29[^,],%d,%d\n", 
+           &temp.id, temp.title, temp.author, temp.category, &temp.quantity, &temp.available) == 6) {
+        
+        // 4. Check if our memory array is full.
+        if (book_count >= book_capacity) {
+            // 5. If full, double its capacity (our "shelf size").
+            book_capacity = (book_capacity == 0) ? 10 : book_capacity * 2;
+            books = realloc(books, book_capacity * sizeof(Book));
+        }
+
+        // 6. Copy the book from the 'temp' variable into the main 'books' array.
+        books[book_count++] = temp;
+
+        // 7. Update the global ID counter to avoid re-using IDs.
+        if (temp.id >= next_book_id) next_book_id = temp.id + 1;
+    }
+    
+    // 8. Close the file.
+    fclose(file);
+}
+```
+- **Line 3 (`fscanf` format string)**: This is complex but powerful. `%99[^,]` means "read up to 99 characters until you hit a comma." This prevents buffer overflows. `fscanf` returns the number of items it successfully read, so we check if it's `6` to ensure the line is not corrupted.
+
 ---
 
-## ⚙️ Detailed Function Breakdown
+## 🎬 Part 4: The Core Application Logic
 
-Here is a step-by-step walkthrough of the most important functions in the system.
+These are the functions that the user interacts with directly.
 
-### Program Entry Point: `main()`
+### `void admin_menu()`
 
-The `main` function is the "director" of the entire program. Its job is simple and linear.
+**Purpose:** To display the main control panel for the Librarian and handle their actions.
 
-**How it works:**
-1.  **`enable_virtual_terminal_processing()`**: This is a Windows-specific function to ensure that the ANSI color codes (which make the text colored) are processed correctly. It does nothing on other systems.
-2.  **`initialize_system()`**: This is a crucial first step. It calls the `load_*()` functions to read all data from the `.txt` files and populate the in-memory arrays. If it detects that the `members.txt` file is empty, it creates the default admin account.
-3.  **The Main Loop (`do-while`)**: This loop is what keeps the program running and the main menu visible.
-    - It clears the screen (`clear_screen()`).
-    - It prints the main menu options: Login or Exit.
-    - It waits for user input. If the user chooses to log in, it calls the `login()` function.
-    - The loop only terminates when the user selects '2' (Exit).
-4.  **Cleanup**: Before the program fully exits, it calls `free()` on all the dynamic arrays (`books`, `members`, `transactions`). This returns the memory to the operating system, which is good practice to prevent memory leaks.
-
-**Code Snippet:**
 ```c
-int main() {
-    enable_virtual_terminal_processing();
-    initialize_system();
+void admin_menu() {
     int choice;
-    do {
+    do { // Start a loop that continues until the user chooses to logout.
+        // 1. Check for session timeout. If true, this function exits immediately.
+        if (check_session_timeout()) return;
+        
+        // 2. Clear the screen and display the menu options.
         clear_screen();
-        // ... print main menu ...
-        choice = get_int_input("\nChoose an option: ");
-        switch (choice) {
-            case 1:
-                login();
+        printf(COLOR_CYAN "===================================\n"
+                         "          Librarian Menu\n"
+                         "===================================\n" COLOR_RESET);
+        printf("1. Add Book\n2. Delete Book\n ... 8. Logout\n");
+
+        // 3. Get the user's choice.
+        choice = get_int_input("\nSelect an option: ");
+
+        // 4. Use a 'switch' statement to perform an action based on the choice.
+        switch(choice) {
+            case 1: 
+                add_book(); // Call the function to add a book.
+                press_enter_to_continue(); // Pause so the user can see the result.
                 break;
-            case 2:
-                // ... print goodbye message ...
+            case 3:
+                list_all_books(); // This function has its own pause system (pagination).
                 break;
-            // ...
+            case 8:
+                printf(COLOR_YELLOW "Logged out.\n" COLOR_RESET);
+                press_enter_to_continue();
+                break;
+            default:
+                printf(COLOR_RED "Invalid option.\n" COLOR_RESET);
+                press_enter_to_continue();
         }
-    } while (choice != 2);
-    
-    // Cleanup
-    free(books);
-    free(members);
-    free(transactions);
-    return 0;
+    } while (choice != 8); // 5. The loop repeats unless the choice was 8.
 }
 ```
 
-### UI Function: `get_masked_password()`
+### `void search_books()`
 
-This function provides the `******` effect when typing passwords.
+**Purpose:** Allows members to search the library catalog.
 
-**How it works:**
-- It uses preprocessor directives (`#ifdef _WIN32`) to run different code depending on the operating system.
-- **On Windows:** It uses the `_getch()` function from `conio.h`. This function reads a single character from the keyboard *without* displaying it on the screen. The function then manually prints a `*` in its place.
-- **On Linux/macOS:** It uses the `termios` library. It gets the current terminal settings, disables the `ECHO` flag (which is responsible for displaying typed characters), reads the password, and then immediately re-enables the `ECHO` flag to return the terminal to its normal state.
-
-**Code Snippet:**
 ```c
-void get_masked_password(const char *prompt, char *buffer, int size) {
-    printf("%s", prompt);
-    fflush(stdout);
-#ifdef _WIN32
-    int i = 0;
-    char ch;
-    // Loop until Enter is pressed
-    while (i < size - 1 && (ch = _getch()) != '\r') {
-        // ... handle backspace ...
-        buffer[i++] = ch;
-        printf("*"); // Manually print the asterisk
-    }
-    buffer[i] = '\0';
-#else
-    // Linux/macOS implementation using termios
-    struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ECHO); // Turn off echoing
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    fgets(buffer, size, stdin); // Read the password
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Turn echoing back on
-#endif
-    printf("\n");
-}
-```
-
-### Core Logic: Pagination in `list_all_books()`
-
-This function displays a long list of books in user-friendly pages.
-
-**How it works:**
-1.  **Calculate Pages**: It first calculates `total_pages` based on the number of books and `ITEMS_PER_PAGE`.
-2.  **Navigation Loop (`do-while`)**: The function enters a loop that continues until the user chooses to quit (`Q`).
-3.  **Display Current Page**: Inside the loop, it calls a helper function, `display_books_paginated()`. This helper function:
-    - Calculates the `start` and `end` index for the current page (e.g., for page 2, it would display items 10 through 19).
-    - Loops from `start` to `end` and prints only the books in that range.
-4.  **Get User Input**: After displaying the page, it prompts the user for a navigation command (`N`, `P`, or `Q`).
-5.  **Update Page**: Based on the input, it either increments or decrements the `current_page` variable, and the loop repeats, displaying the new page.
-
-**Code Snippet:**
-```c
-void list_all_books() {
-    int current_page = 0;
-    int total_pages = (book_count + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE;
+void search_books() {
+    // 1. Display search options (Title, Author, etc.) and get user's choice.
     // ...
-    char choice;
-    do {
-        // This function prints the header and the items for the current page
-        display_books_paginated(current_page);
-        
-        printf("Enter (N)ext, (P)revious, or (Q)uit to menu: ");
-        choice = getchar();
-        clear_input_buffer();
-        
-        switch (tolower(choice)) {
-            case 'n':
-                if (current_page < total_pages - 1) current_page++;
-                break;
-            case 'p':
-                if (current_page > 0) current_page--;
-                break;
-        }
-    } while (tolower(choice) != 'q');
-}
-```
+    char query[100];
+    get_string_input("Enter search term: ", query, sizeof(query));
 
-### Core Logic: Fine Calculation in `return_book()`
+    // 2. Convert the user's search query to lowercase for case-insensitive search.
+    char lower_query[100];
+    for(int j=0; query[j]; j++){ lower_query[j] = tolower(query[j]); }
+    lower_query[strlen(query)] = '\0';
 
-This function handles the logic for returning a book and calculating any overdue fines.
+    // 3. Print the results header.
+    // ...
 
-**How it works:**
-1.  **Identify Book**: It first finds the specific transaction for the book being returned.
-2.  **Set Return Date**: It records the exact moment of return by setting `trans->return_date = time(NULL);`.
-3.  **Check for Overdue**: This is the key step. It compares the return date with the due date.
-    ```c
-    if (trans->return_date > trans->due_date) {
+    // 4. Loop through every book in the library.
+    for (int i = 0; i < book_count; i++) {
         // ...
-    }
-    ```
-4.  **Calculate Fine**: If the book is overdue:
-    - `difftime()`: This function calculates the difference between two `time_t` values in seconds.
-    - The seconds are converted to days. We add `+ 1` to ensure any part of a day counts as a full day late.
-    - The number of late days is multiplied by `FINE_PER_DAY` to calculate the final fine.
-    - A yellow-colored message is displayed to the user with the fine amount.
-5.  **Update Inventory**: The book's `available` count is incremented by 1.
-6.  **Save Changes**: `save_books()` and `save_transactions()` are called to write the updated data to the disk.
+        // 5. Get the field to check based on the user's search choice (title, author, etc.).
+        const char *field_to_check = books[i].title; // Example
+        
+        // 6. Convert that field to lowercase for comparison.
+        char lower_field[100];
+        for(int j=0; field_to_check[j]; j++){ lower_field[j] = tolower(field_to_check[j]); }
+        lower_field[strlen(field_to_check)] = '\0';
 
-**Code Snippet:**
-```c
-if (trans->return_date > trans->due_date) {
-    // Calculate the difference in seconds
-    double seconds_late = difftime(trans->return_date, trans->due_date);
-    
-    // Convert seconds to days (86400 seconds in a day)
-    int days_late = (int)(seconds_late / (60 * 60 * 24)) + 1;
-    
-    // Calculate the fine
-    trans->fine = days_late * FINE_PER_DAY;
-    
-    printf(COLOR_YELLOW "\nThe book is overdue! A fine of $%.2f has been charged.\n" COLOR_RESET, trans->fine);
+        // 7. Use strstr() to see if the 'lower_query' is a substring of the 'lower_field'.
+        if (strstr(lower_field, lower_query)) {
+            // 8. If it's a match, print the book's details.
+            printf("%-5d | %-30s ...\n", books[i].id, books[i].title, ...);
+            found = 1;
+        }
+    }
+    // ...
 }
 ```
-
----
-
-## 🚀 Future Work & Improvements
-
-While the system is fully functional, here are some potential areas for improvement:
-- **Upgrade to a Database:** Migrating from `.txt` files to **SQLite** would provide more robust, efficient, and reliable data storage.
-- **Enhanced Security:** Replace the educational Caesar Cipher with a strong hashing algorithm like **SHA-256** or **Argon2** with random salts for proper password security.
-- **Code Modularity:** Split the code into multiple `.c` and `.h` files (e.g., `book.c`, `member.c`, `ui.c`) for better organization and maintainability.
