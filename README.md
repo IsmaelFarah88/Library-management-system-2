@@ -1,6 +1,5 @@
  
 [English](#-english-version) | [العربية](#-arabic-version)
-
 <br>
 
 ## 🇬🇧 English Version
