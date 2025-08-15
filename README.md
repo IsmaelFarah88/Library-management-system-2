@@ -1,287 +1,189 @@
-# Library Management System: A Line-by-Line Code Analysis
 
-## 📜 Document Purpose
+[English](#-english-version) | [العربية](#-arabic-version)
 
-This document provides an exhaustive, line-by-line technical breakdown of the C-based Library Management System. Its goal is to demystify the code, making it understandable for developers, students, and anyone curious about how its features are implemented. We will explore everything from the foundational building blocks to the core application logic.
+<br>
 
----
+## 🇬🇧 English Version
 
-## 🏛️ Part 1: The Building Blocks (Headers, Globals, Structs)
+# 📖 Library Management System
 
-Before any function runs, the program sets up its environment and defines its data templates.
+## Overview
 
-### Headers (`#include`)
+This project is a comprehensive, console-based Library Management System built in **C**. It provides a robust command-line interface (CLI) for managing books, members, and the borrowing/returning process. The system is designed to be efficient, secure, and cross-platform compatible (Windows & Linux/Unix).
 
-This is the first section of the code. Each `#include` directive tells the compiler to bring in a "toolbox" of pre-written functions.
+## ✨ Key Features
 
-```c
-#include <stdio.h>      // Standard Input/Output: For functions like printf() and fopen().
-#include <stdlib.h>     // Standard Library: For memory allocation (realloc, free) and system("cls").
-#include <string.h>     // String Library: For working with text (strcmp, strcpy, strstr).
-#include <time.h>       // Time Library: For getting the current time (time()) for transactions.
-#include <ctype.h>      // Character Type Library: For functions like tolower() and isdigit().
+### 🌟 General Features
+- **Cross-Platform:** Code is compatible with both Windows and Linux/Unix environments.
+- **Command-Line Interface (CLI):** An intuitive, menu-driven interface for easy navigation.
+- **File-Based Storage:** All data (books, members, transactions) is persistently stored in `.txt` files.
+- **Enhanced UI:** Utilizes ANSI color codes to improve readability and user experience.
+- **Pagination:** Displays long lists (like books and transactions) across multiple pages for better readability.
+- **Security:**
+    - **File Locking:** Prevents data corruption during simultaneous write operations.
+    - **Password Encryption:** Member passwords are encrypted using a simple Caesar Cipher.
+    - **Password Strength Validation:** Enforces different complexity rules for admin and member passwords.
+    - **Masked Password Input:** Hides characters during password entry.
+    - **Secure Sessions:** Includes a session timeout for inactivity and limits login attempts to prevent brute-force attacks.
 
-#ifdef _WIN32
-#include <conio.h>      // Windows-specific: For _getch() used in masked password input.
-#include <windows.h>    // Windows-specific: For color support and file locking.
-#include <io.h>         // Windows-specific: For getting file handles for locking.
-#else
-#include <termios.h>    // Linux/macOS-specific: For masked password input.
-#include <unistd.h>     // Linux/macOS-specific: General POSIX functions.
-#include <fcntl.h>      // Linux/macOS-specific: For file control and locking.
-#endif
-```
+### 👨‍💼 Admin Privileges
+- Add and delete books from the library catalog.
+- Add and delete members from the system.
+- View a complete history of all transactions.
+- Reset the password for any member account.
 
-### Data Structures (`struct`)
+### 🧑‍💻 Member Features
+- Search for books by title, author, or category.
+- Borrow available books.
+- Return borrowed books (with automatic fine calculation for overdue items).
+- View personal borrowing history.
+- Change their own password upon first login.
 
-These are the custom "blueprints" for our data.
+## 🛠️ Technology Stack
+- **Programming Language:** C
+- **Key Concepts:**
+    - Data Structures (Structs)
+    - Dynamic Memory Management (`malloc`, `realloc`)
+    - File I/O (`fopen`, `fprintf`, `fscanf`)
+    - Cross-platform conditional compilation (`#ifdef _WIN32`)
 
-```c
-typedef struct {
-    int id;             // A unique number for each book.
-    char title[100];    // A string to hold the book's title.
-    // ... and so on for author, category, etc.
-} Book;
+## 🚀 Getting Started
 
-typedef struct {
-    int id;             // A unique number for each member.
-    char name[50];      // The member's username.
-    char email[100];    // The member's email address.
-    char encrypted_password[256]; // The scrambled password.
-    int is_first_login; // A flag (1 for yes, 0 for no) to force password change.
-} Member;
+To compile and run this project, you will need a C compiler like **GCC**.
 
-// The Transaction struct is defined similarly.
-```
+1.  **Save the Code:**
+    Save the provided C code into a file named `library_system.c`.
 
-### Global Variables
+2.  **Compile:**
+    Open your terminal or command prompt, navigate to the directory containing the file, and compile it using the following command:
+    ```bash
+    gcc library_system.c -o library_system
+    ```
 
-These variables are accessible from anywhere in the code. They hold the application's "state" (all the data currently loaded in memory).
+3.  **Run:**
+    Once compiled successfully, an executable file will be created. Run it with the following command:
+    -   On Linux/macOS:
+        ```bash
+        ./library_system
+        ```
+    -   On Windows:
+        ```bash
+        library_system.exe
+        ```
+    The application will automatically create the necessary data files (`books.txt`, `members.txt`, `transactions.txt`) on its first run.
 
-```c
-Book *books = NULL;          // A pointer that will point to our array of books in memory. Starts as NULL (empty).
-int book_count = 0;          // How many books are currently loaded.
-int book_capacity = 0;       // How much space we have allocated for books (our "shelf size").
-int next_book_id = 1;        // A counter to ensure every new book gets a unique ID.
-// The same pattern is repeated for members and transactions.
-```
+## 📋 How to Use
 
----
+When you start the program, you will be presented with a main menu to log in.
 
-## 🛠️ Part 2: The Foundation - Utility & UI Functions
+1.  **Admin Login:**
+    -   **Username:** `admin`
+    -   **Default Password:** `Admin@1234`
+    -   The admin has full access to all management functions.
 
-These are the helper functions that make the rest of the code cleaner and more powerful.
+2.  **Member Login:**
+    -   Member accounts must be created by an admin first.
+    -   On their first login, members will be prompted to change their initial password.
 
-### `void clear_screen()`
+3.  **Exit:**
+    -   To safely close the application.
 
-**Purpose:** To wipe the console clean, creating an app-like feel.
-
-```c
-void clear_screen() {
-#ifdef _WIN32
-    system("cls"); // If on Windows, run the "cls" command.
-#else
-    system("clear"); // Otherwise (Linux/macOS), run the "clear" command.
-#endif
-}
-```
-1.  **`#ifdef _WIN32`**: A preprocessor directive. It checks if the code is being compiled on Windows.
-2.  **`system("cls")`**: Executes the command-line command `cls`, which clears the screen on Windows.
-3.  **`#else`**: If the condition above is false.
-4.  **`system("clear")`**: Executes the `clear` command, which does the same on Linux and macOS.
-
-### `void press_enter_to_continue()`
-
-**Purpose:** To pause the program until the user is ready to proceed. This is essential for letting the user read messages before the screen is cleared.
-
-```c
-void press_enter_to_continue() {
-    printf(COLOR_YELLOW "\n\nPress Enter to continue..." COLOR_RESET);
-    getchar();
-}
-```
-1.  **`printf(...)`**: Prints the "Press Enter..." message in yellow.
-2.  **`getchar()`**: This is the key. It waits and reads a single character from the keyboard. The program will not proceed until a character is entered (in this case, when the user hits the Enter key).
-
-### `int get_int_input(const char *prompt)`
-
-**Purpose:** To safely get an integer from the user, preventing crashes from invalid text input.
-
-```c
-int get_int_input(const char *prompt) {
-    int value;
-    char buffer[100];
-    while (1) { // Loop forever until a valid number is entered.
-        printf("%s", prompt); // Display the prompt message (e.g., "Enter your choice: ").
-        if (fgets(buffer, sizeof(buffer), stdin) && sscanf(buffer, "%d", &value) == 1) {
-            return value; // If successful, exit the loop and return the integer.
-        }
-        printf(COLOR_RED "Invalid input. Please enter an integer.\n" COLOR_RESET);
-    }
-}
-```
-1.  **`while (1)`**: Creates an infinite loop. The only way to exit is with the `return` statement.
-2.  **`fgets(...)`**: Reads a full line of text from the user's input into `buffer`. This is safer than `scanf` because it handles extra characters gracefully.
-3.  **`sscanf(buffer, "%d", &value) == 1`**: This is the magic. It tries to "scan" the text in `buffer` for an integer (`%d`). If it successfully finds exactly one integer, it returns `1`.
-4.  **`return value`**: If `sscanf` was successful, the function immediately stops and returns the extracted integer.
-5.  **`printf(...)`**: If `sscanf` failed (e.g., the user typed "abc"), it prints an error message, and the loop repeats, asking for input again.
+## 📁 File Structure
+- `library_system.c`: The main source file containing all the application logic.
+- `books.txt`: Stores the library's book collection data.
+- `members.txt`: Stores member account information, including encrypted passwords.
+- `transactions.txt`: Logs all borrow and return activities.
 
 ---
+<br>
 
-## 🗃️ Part 3: Data Management - File I/O and Locking
+## 🇸🇦 النسخة العربية
 
-This section details how the program remembers data between sessions.
+# 📖 نظام إدارة المكتبات
 
-### `void save_books()` (Example for all `save_*` functions)
+## نظرة عامة
 
-**Purpose:** To write the entire array of books from memory to the `books.txt` file.
+هذا المشروع هو نظام إدارة مكتبات متكامل مبني باستخدام لغة البرمجة **C**. يوفر النظام واجهة مستخدم نصية (Console-based) لإدارة الكتب والأعضاء وعمليات الإعارة والإرجاع. تم تصميمه ليكون قوياً، فعالاً، وداعماً لبيئات التشغيل المختلفة (Windows و Linux/Unix).
 
-```c
-void save_books() {
-    // 1. Open the file in "write" mode. This erases the old file.
-    FILE *file = fopen(BOOK_FILE, "w");
-    if (!file) { perror("Could not open books file"); return; }
-    
-    // 2. Lock the file to prevent other processes from writing to it.
-    lock_file(file);
-    
-    // 3. Loop through every book currently in the 'books' array.
-    for (int i = 0; i < book_count; i++) {
-        // 4. Write the book's data to the file in a comma-separated format.
-        fprintf(file, "%d,%s,%s,%s,%d,%d\n", 
-                books[i].id, books[i].title, books[i].author, 
-                books[i].category, books[i].quantity, books[i].available);
-    }
-    
-    // 5. Release the lock.
-    unlock_file(file);
-    
-    // 6. Close the file to save the changes.
-    fclose(file);
-}
-```
+## ✨ الميزات الرئيسية
 
-### `void load_books()` (Example for all `load_*` functions)
+### 🌟 ميزات عامة
+- **دعم متعدد المنصات:** الكود مكتوب ليعمل على أنظمة Windows و Linux/Unix.
+- **واجهة مستخدم نصية (CLI):** واجهة سهلة الاستخدام تعتمد على القوائم والأوامر النصية.
+- **تخزين البيانات:** يتم حفظ جميع البيانات (الكتب، الأعضاء، المعاملات) في ملفات نصية (`.txt`).
+- **واجهة مستخدم محسّنة:** استخدام أكواد ألوان ANSI لتحسين وضوح الواجهة وتجربة المستخدم.
+- **عرض مقسّم للصفحات (Pagination):** عرض القوائم الطويلة (مثل الكتب والمعاملات) على صفحات متعددة لتسهيل التصفح.
+- **أمان البيانات:**
+    - **قفل الملفات (File Locking):** يمنع تلف البيانات عند محاولة الوصول المتزامن للملفات.
+    - **تشفير كلمات المرور:** يتم تشفير كلمات مرور الأعضاء باستخدام تشفير قيصري بسيط.
+    - **التحقق من قوة كلمة المرور:** قواعد مختلفة لضمان قوة كلمات المرور للمسؤولين والأعضاء.
+    - **إخفاء كلمة المرور:** إخفاء الأحرف عند إدخال كلمة المرور.
+    - **جلسات آمنة:** يتضمن مهلة للجلسة عند عدم النشاط ويحد من محاولات تسجيل الدخول للحماية من هجمات التخمين.
 
-**Purpose:** To read the data from `books.txt` and load it into the `books` array in memory when the program starts.
+### 👨‍💼 صلاحيات مسؤول النظام (Admin)
+- إضافة وحذف الكتب من المكتبة.
+- إضافة وحذف الأعضاء.
+- عرض جميع معاملات الإعارة والإرجاع في النظام.
+- إعادة تعيين كلمة مرور أي عضو.
 
-```c
-void load_books() {
-    // 1. Open the file in "read" mode.
-    FILE *file = fopen(BOOK_FILE, "r");
-    if (!file) return; // If the file doesn't exist (e.g., first run), just exit.
+### 🧑‍💻 صلاحيات العضو (Member)
+- البحث عن الكتب (حسب العنوان، المؤلف، أو الفئة).
+- استعارة الكتب المتاحة.
+- إرجاع الكتب المستعارة (مع حساب تلقائي للغرامات عند التأخير).
+- عرض سجل الاستعارات الخاص به.
+- تغيير كلمة المرور الخاصة به عند أول تسجيل دخول.
 
-    Book temp; // 2. A temporary variable to hold the data for one book.
+## 🛠️ التقنيات المستخدمة
+- **لغة البرمجة:** C
+- **المفاهيم الرئيسية:**
+    - هياكل البيانات (Structs)
+    - إدارة الذاكرة الديناميكية (`malloc`, `realloc`)
+    - التعامل مع الملفات (`fopen`, `fprintf`, `fscanf`)
+    - الترجمة المشروطة للمنصات المختلفة (`#ifdef _WIN32`)
 
-    // 3. Loop as long as we can successfully read a full line that matches the format.
-    while (fscanf(file, "%d,%99[^,],%49[^,],%29[^,],%d,%d\n", 
-           &temp.id, temp.title, temp.author, temp.category, &temp.quantity, &temp.available) == 6) {
-        
-        // 4. Check if our memory array is full.
-        if (book_count >= book_capacity) {
-            // 5. If full, double its capacity (our "shelf size").
-            book_capacity = (book_capacity == 0) ? 10 : book_capacity * 2;
-            books = realloc(books, book_capacity * sizeof(Book));
-        }
+## 🚀 كيفية التشغيل
 
-        // 6. Copy the book from the 'temp' variable into the main 'books' array.
-        books[book_count++] = temp;
+لترجمة وتشغيل المشروع، ستحتاج إلى مترجم C مثل **GCC**.
 
-        // 7. Update the global ID counter to avoid re-using IDs.
-        if (temp.id >= next_book_id) next_book_id = temp.id + 1;
-    }
-    
-    // 8. Close the file.
-    fclose(file);
-}
-```
-- **Line 3 (`fscanf` format string)**: This is complex but powerful. `%99[^,]` means "read up to 99 characters until you hit a comma." This prevents buffer overflows. `fscanf` returns the number of items it successfully read, so we check if it's `6` to ensure the line is not corrupted.
+1.  **حفظ الكود:**
+    احفظ الكود المصدري في ملف باسم `library_system.c`.
 
----
+2.  **الترجمة (Compilation):**
+    افتح الطرفية (Terminal) أو موجه الأوامر (Command Prompt) وانتقل إلى المجلد الذي يحتوي على الملف، ثم قم بترجمته باستخدام الأمر التالي:
+    ```bash
+    gcc library_system.c -o library_system
+    ```
 
-## 🎬 Part 4: The Core Application Logic
+3.  **التشغيل (Execution):**
+    بعد انتهاء الترجمة بنجاح، سيتم إنشاء ملف تنفيذي. قم بتشغيله بالأمر:
+    -   في Linux/macOS:
+        ```bash
+        ./library_system
+        ```
+    -   في Windows:
+        ```bash
+        library_system.exe
+        ```
+    سيقوم البرنامج بإنشاء الملفات اللازمة (`books.txt`, `members.txt`, `transactions.txt`) تلقائيًا عند تشغيله لأول مرة.
 
-These are the functions that the user interacts with directly.
+## 📋 كيفية الاستخدام
 
-### `void admin_menu()`
+عند تشغيل البرنامج، ستظهر لك قائمة رئيسية لاختيار نوع المستخدم:
 
-**Purpose:** To display the main control panel for the Librarian and handle their actions.
+1.  **تسجيل الدخول كمسؤول (Admin):**
+    -   **اسم المستخدم:** `admin`
+    -   **كلمة المرور الافتراضية:** `Admin@1234`
+    -   سيتمكن المسؤول من الوصول إلى قائمة التحكم الكاملة.
 
-```c
-void admin_menu() {
-    int choice;
-    do { // Start a loop that continues until the user chooses to logout.
-        // 1. Check for session timeout. If true, this function exits immediately.
-        if (check_session_timeout()) return;
-        
-        // 2. Clear the screen and display the menu options.
-        clear_screen();
-        printf(COLOR_CYAN "===================================\n"
-                         "          Librarian Menu\n"
-                         "===================================\n" COLOR_RESET);
-        printf("1. Add Book\n2. Delete Book\n ... 8. Logout\n");
+2.  **تسجيل الدخول كعضو (Member):**
+    -   يتم إنشاء حسابات الأعضاء بواسطة المسؤول أولاً.
+    -   عند أول تسجيل دخول للعضو، سيُطلب منه تغيير كلمة المرور الأولية.
 
-        // 3. Get the user's choice.
-        choice = get_int_input("\nSelect an option: ");
+3.  **الخروج:**
+    -   لإنهاء البرنامج بأمان.
 
-        // 4. Use a 'switch' statement to perform an action based on the choice.
-        switch(choice) {
-            case 1: 
-                add_book(); // Call the function to add a book.
-                press_enter_to_continue(); // Pause so the user can see the result.
-                break;
-            case 3:
-                list_all_books(); // This function has its own pause system (pagination).
-                break;
-            case 8:
-                printf(COLOR_YELLOW "Logged out.\n" COLOR_RESET);
-                press_enter_to_continue();
-                break;
-            default:
-                printf(COLOR_RED "Invalid option.\n" COLOR_RESET);
-                press_enter_to_continue();
-        }
-    } while (choice != 8); // 5. The loop repeats unless the choice was 8.
-}
-```
-
-### `void search_books()`
-
-**Purpose:** Allows members to search the library catalog.
-
-```c
-void search_books() {
-    // 1. Display search options (Title, Author, etc.) and get user's choice.
-    // ...
-    char query[100];
-    get_string_input("Enter search term: ", query, sizeof(query));
-
-    // 2. Convert the user's search query to lowercase for case-insensitive search.
-    char lower_query[100];
-    for(int j=0; query[j]; j++){ lower_query[j] = tolower(query[j]); }
-    lower_query[strlen(query)] = '\0';
-
-    // 3. Print the results header.
-    // ...
-
-    // 4. Loop through every book in the library.
-    for (int i = 0; i < book_count; i++) {
-        // ...
-        // 5. Get the field to check based on the user's search choice (title, author, etc.).
-        const char *field_to_check = books[i].title; // Example
-        
-        // 6. Convert that field to lowercase for comparison.
-        char lower_field[100];
-        for(int j=0; field_to_check[j]; j++){ lower_field[j] = tolower(field_to_check[j]); }
-        lower_field[strlen(field_to_check)] = '\0';
-
-        // 7. Use strstr() to see if the 'lower_query' is a substring of the 'lower_field'.
-        if (strstr(lower_field, lower_query)) {
-            // 8. If it's a match, print the book's details.
-            printf("%-5d | %-30s ...\n", books[i].id, books[i].title, ...);
-            found = 1;
-        }
-    }
-    // ...
-}
-```
+## 📁 هيكل الملفات
+- `library_system.c`: الملف المصدري الرئيسي الذي يحتوي على كل منطق البرنامج.
+- `books.txt`: يخزن بيانات مجموعة الكتب في المكتبة.
+- `members.txt`: يخزن معلومات حسابات الأعضاء، بما في ذلك كلمات المرور المشفرة.
+- `transactions.txt`: يسجل جميع أنشطة الإعارة والإرجاع.
