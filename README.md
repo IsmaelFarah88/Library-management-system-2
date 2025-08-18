@@ -1,188 +1,424 @@
-  
-[English](#-english-version) | [العربية](#-arabic-version)
-<br>
 
-## 🇬🇧 English Version
 
-# 📖 Library Management System
+## تحليل الدوال
 
-## Overview
+### `void caesar_encrypt(const char *input, char *output)`
 
-This project is a comprehensive, console-based Library Management System built in **C**. It provides a robust command-line interface (CLI) for managing books, members, and the borrowing/returning process. The system is designed to be efficient, secure, and cross-platform compatible (Windows & Linux/Unix).
+#### الشرح بالعربية
+تقوم بتشفير سلسلة نصية معينة باستخدام تشفير قيصر بسيط بقيمة إزاحة محددة مسبقًا (CAESAR_SHIFT). تقوم بإزاحة كل حرف بإضافة قيمة الإزاحة.
 
-## ✨ Key Features
-
-### 🌟 General Features
-- **Cross-Platform:** Code is compatible with both Windows and Linux/Unix environments.
-- **Command-Line Interface (CLI):** An intuitive, menu-driven interface for easy navigation.
-- **File-Based Storage:** All data (books, members, transactions) is persistently stored in `.txt` files.
-- **Enhanced UI:** Utilizes ANSI color codes to improve readability and user experience.
-- **Pagination:** Displays long lists (like books and transactions) across multiple pages for better readability.
-- **Security:**
-    - **File Locking:** Prevents data corruption during simultaneous write operations.
-    - **Password Encryption:** Member passwords are encrypted using a simple Caesar Cipher.
-    - **Password Strength Validation:** Enforces different complexity rules for admin and member passwords.
-    - **Masked Password Input:** Hides characters during password entry.
-    - **Secure Sessions:** Includes a session timeout for inactivity and limits login attempts to prevent brute-force attacks.
-
-### 👨‍💼 Admin Privileges
-- Add and delete books from the library catalog.
-- Add and delete members from the system.
-- View a complete history of all transactions.
-- Reset the password for any member account.
-
-### 🧑‍💻 Member Features
-- Search for books by title, author, or category.
-- Borrow available books.
-- Return borrowed books (with automatic fine calculation for overdue items).
-- View personal borrowing history.
-- Change their own password upon first login.
-
-## 🛠️ Technology Stack
-- **Programming Language:** C
-- **Key Concepts:**
-    - Data Structures (Structs)
-    - Dynamic Memory Management (`malloc`, `realloc`)
-    - File I/O (`fopen`, `fprintf`, `fscanf`)
-    - Cross-platform conditional compilation (`#ifdef _WIN32`)
-
-## 🚀 Getting Started
-
-To compile and run this project, you will need a C compiler like **GCC**.
-
-1.  **Save the Code:**
-    Save the provided C code into a file named `library_system.c`.
-
-2.  **Compile:**
-    Open your terminal or command prompt, navigate to the directory containing the file, and compile it using the following command:
-    ```bash
-    gcc library_system.c -o library_system
-    ```
-
-3.  **Run:**
-    Once compiled successfully, an executable file will be created. Run it with the following command:
-    -   On Linux/macOS:
-        ```bash
-        ./library_system
-        ```
-    -   On Windows:
-        ```bash
-        library_system.exe
-        ```
-    The application will automatically create the necessary data files (`books.txt`, `members.txt`, `transactions.txt`) on its first run.
-
-## 📋 How to Use
-
-When you start the program, you will be presented with a main menu to log in.
-
-1.  **Admin Login:**
-    -   **Username:** `admin`
-    -   **Default Password:** `Admin@1234`
-    -   The admin has full access to all management functions.
-
-2.  **Member Login:**
-    -   Member accounts must be created by an admin first.
-    -   On their first login, members will be prompted to change their initial password.
-
-3.  **Exit:**
-    -   To safely close the application.
-
-## 📁 File Structure
-- `library_system.c`: The main source file containing all the application logic.
-- `books.txt`: Stores the library's book collection data.
-- `members.txt`: Stores member account information, including encrypted passwords.
-- `transactions.txt`: Logs all borrow and return activities.
+#### Explanation in English
+Encrypts a given string using a simple Caesar cipher with a predefined shift value (CAESAR_SHIFT). It shifts each character by adding the shift value.
 
 ---
-<br>
 
-## 🇸🇦 النسخة العربية
+### `void caesar_decrypt(const char *input, char *output)`
 
-# 📖 نظام إدارة المكتبات
+#### الشرح بالعربية
+تقوم بفك تشفير سلسلة نصية معينة تم تشفيرها باستخدام تشفير قيصر. تقوم بإزاحة كل حرف للخلف بطرح قيمة الإزاحة المحددة مسبقًا (CAESAR_SHIFT).
 
-## نظرة عامة
+#### Explanation in English
+Decrypts a given string that was encrypted using the Caesar cipher. It shifts each character back by subtracting the predefined shift value (CAESAR_SHIFT).
 
-هذا المشروع هو نظام إدارة مكتبات متكامل مبني باستخدام لغة البرمجة **C**. يوفر النظام واجهة مستخدم نصية (Console-based) لإدارة الكتب والأعضاء وعمليات الإعارة والإرجاع. تم تصميمه ليكون قوياً، فعالاً، وداعماً لبيئات التشغيل المختلفة (Windows و Linux/Unix).
+---
 
-## ✨ الميزات الرئيسية
+### `void enable_virtual_terminal_processing()`
 
-### 🌟 ميزات عامة
-- **دعم متعدد المنصات:** الكود مكتوب ليعمل على أنظمة Windows و Linux/Unix.
-- **واجهة مستخدم نصية (CLI):** واجهة سهلة الاستخدام تعتمد على القوائم والأوامر النصية.
-- **تخزين البيانات:** يتم حفظ جميع البيانات (الكتب، الأعضاء، المعاملات) في ملفات نصية (`.txt`).
-- **واجهة مستخدم محسّنة:** استخدام أكواد ألوان ANSI لتحسين وضوح الواجهة وتجربة المستخدم.
-- **عرض مقسّم للصفحات (Pagination):** عرض القوائم الطويلة (مثل الكتب والمعاملات) على صفحات متعددة لتسهيل التصفح.
-- **أمان البيانات:**
-    - **قفل الملفات (File Locking):** يمنع تلف البيانات عند محاولة الوصول المتزامن للملفات.
-    - **تشفير كلمات المرور:** يتم تشفير كلمات مرور الأعضاء باستخدام تشفير قيصري بسيط.
-    - **التحقق من قوة كلمة المرور:** قواعد مختلفة لضمان قوة كلمات المرور للمسؤولين والأعضاء.
-    - **إخفاء كلمة المرور:** إخفاء الأحرف عند إدخال كلمة المرور.
-    - **جلسات آمنة:** يتضمن مهلة للجلسة عند عدم النشاط ويحد من محاولات تسجيل الدخول للحماية من هجمات التخمين.
+#### الشرح بالعربية
+تقوم بتمكين معالجة الطرفية الافتراضية لوحدة التحكم على أنظمة Windows، مما يسمح باستخدام أكواد ANSI للألوان في الإخراج. لا تفعل شيئًا على أنظمة التشغيل الأخرى.
 
-### 👨‍💼 صلاحيات مسؤول النظام (Admin)
-- إضافة وحذف الكتب من المكتبة.
-- إضافة وحذف الأعضاء.
-- عرض جميع معاملات الإعارة والإرجاع في النظام.
-- إعادة تعيين كلمة مرور أي عضو.
+#### Explanation in English
+Enables virtual terminal processing for the console on Windows systems, allowing ANSI escape codes for colored output. It does nothing on other operating systems.
 
-### 🧑‍💻 صلاحيات العضو (Member)
-- البحث عن الكتب (حسب العنوان، المؤلف، أو الفئة).
-- استعارة الكتب المتاحة.
-- إرجاع الكتب المستعارة (مع حساب تلقائي للغرامات عند التأخير).
-- عرض سجل الاستعارات الخاص به.
-- تغيير كلمة المرور الخاصة به عند أول تسجيل دخول.
+---
 
-## 🛠️ التقنيات المستخدمة
-- **لغة البرمجة:** C
-- **المفاهيم الرئيسية:**
-    - هياكل البيانات (Structs)
-    - إدارة الذاكرة الديناميكية (`malloc`, `realloc`)
-    - التعامل مع الملفات (`fopen`, `fprintf`, `fscanf`)
-    - الترجمة المشروطة للمنصات المختلفة (`#ifdef _WIN32`)
+### `void clear_screen()`
 
-## 🚀 كيفية التشغيل
+#### الشرح بالعربية
+تقوم بمسح شاشة وحدة التحكم باستخدام أوامر خاصة بالنظام (cls لنظام Windows، وclear للأنظمة الشبيهة بيونكس).
 
-لترجمة وتشغيل المشروع، ستحتاج إلى مترجم C مثل **GCC**.
+#### Explanation in English
+Clears the console screen using system-specific commands (cls for Windows, clear for Unix-like systems).
 
-1.  **حفظ الكود:**
-    احفظ الكود المصدري في ملف باسم `library_system.c`.
+---
 
-2.  **الترجمة (Compilation):**
-    افتح الطرفية (Terminal) أو موجه الأوامر (Command Prompt) وانتقل إلى المجلد الذي يحتوي على الملف، ثم قم بترجمته باستخدام الأمر التالي:
-    ```bash
-    gcc library_system.c -o library_system
-    ```
+### `void clear_input_buffer()`
 
-3.  **التشغيل (Execution):**
-    بعد انتهاء الترجمة بنجاح، سيتم إنشاء ملف تنفيذي. قم بتشغيله بالأمر:
-    -   في Linux/macOS:
-        ```bash
-        ./library_system
-        ```
-    -   في Windows:
-        ```bash
-        library_system.exe
-        ```
-    سيقوم البرنامج بإنشاء الملفات اللازمة (`books.txt`, `members.txt`, `transactions.txt`) تلقائيًا عند تشغيله لأول مرة.
+#### الشرح بالعربية
+تقوم بمسح أي أحرف متبقية في مخزن الإدخال القياسي المؤقت، وتستخدم عادةً بعد scanf أو getchar لمنع بقايا الأسطر الجديدة من التأثير على استدعاءات fgets اللاحقة.
 
-## 📋 كيفية الاستخدام
+#### Explanation in English
+Clears any remaining characters in the standard input buffer, typically used after scanf or getchar to prevent leftover newlines from affecting subsequent fgets calls.
 
-عند تشغيل البرنامج، ستظهر لك قائمة رئيسية لاختيار نوع المستخدم:
+---
 
-1.  **تسجيل الدخول كمسؤول (Admin):**
-    -   **اسم المستخدم:** `admin`
-    -   **كلمة المرور الافتراضية:** `Admin@1234`
-    -   سيتمكن المسؤول من الوصول إلى قائمة التحكم الكاملة.
+### `void press_enter_to_continue()`
 
-2.  **تسجيل الدخول كعضو (Member):**
-    -   يتم إنشاء حسابات الأعضاء بواسطة المسؤول أولاً.
-    -   عند أول تسجيل دخول للعضو، سيُطلب منه تغيير كلمة المرور الأولية.
+#### الشرح بالعربية
+تطلب من المستخدم الضغط على مفتاح Enter للمتابعة وتنتظر ضغط المفتاح.
 
-3.  **الخروج:**
-    -   لإنهاء البرنامج بأمان.
+#### Explanation in English
+Prompts the user to press Enter to continue execution and waits for the Enter key press.
 
-## 📁 هيكل الملفات
-- `library_system.c`: الملف المصدري الرئيسي الذي يحتوي على كل منطق البرنامج.
-- `books.txt`: يخزن بيانات مجموعة الكتب في المكتبة.
-- `members.txt`: يخزن معلومات حسابات الأعضاء، بما في ذلك كلمات المرور المشفرة.
-- `transactions.txt`: يسجل جميع أنشطة الإعارة والإرجاع.
+---
+
+### `void get_string_input(const char *prompt, char *buffer, int size)`
+
+#### الشرح بالعربية
+تطلب من المستخدم إدخال نص برسالة معينة وتقرأ سطرًا من الإدخال النصي في مخزن مؤقت، مع إزالة حرف السطر الجديد الزائد.
+
+#### Explanation in English
+Prompts the user with a given message and reads a line of text input into a buffer, removing the trailing newline character.
+
+---
+
+### `int get_int_input(const char *prompt)`
+
+#### الشرح بالعربية
+تطلب من المستخدم إدخال عدد صحيح وتستمر في الطلب حتى يتم إدخال عدد صحيح صالح.
+
+#### Explanation in English
+Prompts the user for an integer input and repeatedly asks until a valid integer is entered.
+
+---
+
+### `void get_masked_password(const char *prompt, char *buffer, int size)`
+
+#### الشرح بالعربية
+تطلب من المستخدم إدخال كلمة مرور، وتعرض علامات نجمية (*) بدلاً من الأحرف الفعلية أثناء الكتابة (إخفاء). تتعامل مع مفتاحي المسافة الخلفية والسطر الجديد.
+
+#### Explanation in English
+Prompts the user for a password input, displaying asterisks (*) instead of the actual characters as they are typed (masking). It handles backspace and newline characters.
+
+---
+
+### `void lock_file(FILE *fp)`
+
+#### الشرح بالعربية
+تحصل على قفل كتابة حصري على مؤشر الملف المحدد، مما يمنع العمليات الأخرى من الكتابة إليه في نفس الوقت. تستخدم آليات قفل خاصة بالمنصة.
+
+#### Explanation in English
+Acquires an exclusive write lock on the specified file pointer, preventing other processes from writing to it simultaneously. It uses platform-specific locking mechanisms.
+
+---
+
+### `void unlock_file(FILE *fp)`
+
+#### الشرح بالعربية
+تحرر قفل الكتابة الحصري على مؤشر الملف المحدد، مما يسمح للعمليات الأخرى بالوصول إليه. تستخدم آليات تحرير قفل خاصة بالمنصة.
+
+#### Explanation in English
+Releases the exclusive write lock on the specified file pointer, allowing other processes to access it. It uses platform-specific unlocking mechanisms.
+
+---
+
+### `void load_books()`
+
+#### الشرح بالعربية
+تقوم بتحميل بيانات الكتب من ملف BOOK_FILE إلى مصفوفة books العالمية. تعيد تخصيص الذاكرة ديناميكيًا حسب الحاجة وتحدث next_book_id.
+
+#### Explanation in English
+Loads book data from the BOOK_FILE into the global books array. It dynamically reallocates memory as needed and updates the next_book_id.
+
+---
+
+### `void save_books()`
+
+#### الشرح بالعربية
+تقوم بحفظ جميع بيانات الكتب من مصفوفة books العالمية إلى ملف BOOK_FILE. تطبق قفلًا على الملف أثناء الكتابة لضمان سلامة البيانات.
+
+#### Explanation in English
+Saves all book data from the global books array to the BOOK_FILE. It applies a file lock during writing to ensure data integrity.
+
+---
+
+### `void load_members()`
+
+#### الشرح بالعربية
+تقوم بتحميل بيانات الأعضاء من ملف MEMBER_FILE إلى مصفوفة members العالمية. تعيد تخصيص الذاكرة ديناميكيًا حسب الحاجة وتحدث next_member_id.
+
+#### Explanation in English
+Loads member data from the MEMBER_FILE into the global members array. It dynamically reallocates memory as needed and updates the next_member_id.
+
+---
+
+### `void save_members()`
+
+#### الشرح بالعربية
+تقوم بحفظ جميع بيانات الأعضاء من مصفوفة members العالمية إلى ملف MEMBER_FILE. تطبق قفلًا على الملف أثناء الكتابة لضمان سلامة البيانات.
+
+#### Explanation in English
+Saves all member data from the global members array to the MEMBER_FILE. It applies a file lock during writing to ensure data integrity.
+
+---
+
+### `void load_transactions()`
+
+#### الشرح بالعربية
+تقوم بتحميل بيانات المعاملات من ملف TRANSACTION_FILE إلى مصفوفة transactions العالمية. تتعامل مع تحويل time_t، وتعيد تخصيص الذاكرة ديناميكيًا، وتحدث next_transaction_id.
+
+#### Explanation in English
+Loads transaction data from the TRANSACTION_FILE into the global transactions array. It handles time_t conversion, dynamically reallocates memory, and updates next_transaction_id.
+
+---
+
+### `void save_transactions()`
+
+#### الشرح بالعربية
+تقوم بحفظ جميع بيانات المعاملات من مصفوفة transactions العالمية إلى ملف TRANSACTION_FILE. تطبق قفلًا على الملف أثناء الكتابة لضمان سلامة البيانات.
+
+#### Explanation in English
+Saves all transaction data from the global transactions array to the TRANSACTION_FILE. It applies a file lock during writing to ensure data integrity.
+
+---
+
+### `Book *find_book_by_id(int id)`
+
+#### الشرح بالعربية
+تبحث عن كتاب في مصفوفة books العالمية باستخدام معرفه وتعيد مؤشرًا إلى الكتاب إذا تم العثور عليه، وإلا تعيد NULL.
+
+#### Explanation in English
+Searches for a book in the global books array by its ID and returns a pointer to the book if found, otherwise returns NULL.
+
+---
+
+### `Member *find_member_by_id(int id)`
+
+#### الشرح بالعربية
+تبحث عن عضو في مصفوفة members العالمية باستخدام معرفه وتعيد مؤشرًا إلى العضو إذا تم العثور عليه، وإلا تعيد NULL.
+
+#### Explanation in English
+Searches for a member in the global members array by their ID and returns a pointer to the member if found, otherwise returns NULL.
+
+---
+
+### `Member *find_member_by_name(const char *name)`
+
+#### الشرح بالعربية
+تبحث عن عضو في مصفوفة members العالمية باستخدام اسمه وتعيد مؤشرًا إلى العضو إذا تم العثور عليه، وإلا تعيد NULL.
+
+#### Explanation in English
+Searches for a member in the global members array by their name and returns a pointer to the member if found, otherwise returns NULL.
+
+---
+
+### `int is_strong_admin_password(const char *pass)`
+
+#### الشرح بالعربية
+تتحقق مما إذا كانت كلمة المرور المعطاة تستوفي متطلبات كلمة المرور القوية للمسؤول: 12 حرفًا كحد أدنى، وحرف كبير واحد على الأقل، وحرف صغير واحد، ورقم واحد، وحرف خاص واحد.
+
+#### Explanation in English
+Checks if a given password meets the strong password requirements for an admin: minimum 12 characters, at least one uppercase letter, one lowercase letter, one digit, and one special character.
+
+---
+
+### `int is_valid_member_password(const char *pass)`
+
+#### الشرح بالعربية
+تتحقق مما إذا كانت كلمة المرور المعطاة تستوفي متطلبات الصلاحية للعضو: 8 أحرف كحد أدنى ورقم واحد على الأقل.
+
+#### Explanation in English
+Checks if a given password meets the validity requirements for a member: minimum 8 characters and at least one digit.
+
+---
+
+### `void display_books_paginated(int current_page)`
+
+#### الشرح بالعربية
+تعرض قائمة كتب مقسمة على صفحات من مصفوفة books العالمية، حيث تعرض ITEMS_PER_PAGE كتابًا لكل صفحة.
+
+#### Explanation in English
+Displays a paginated list of books from the global books array, showing ITEMS_PER_PAGE books per page.
+
+---
+
+### `void display_transactions_paginated(int current_page)`
+
+#### الشرح بالعربية
+تعرض قائمة معاملات مقسمة على صفحات من مصفوفة transactions العالمية، حيث تعرض ITEMS_PER_PAGE معاملة لكل صفحة. تقوم بتنسيق تواريخ الاستعارة والإرجاع.
+
+#### Explanation in English
+Displays a paginated list of transactions from the global transactions array, showing ITEMS_PER_PAGE transactions per page. It formats borrow and return dates.
+
+---
+
+### `void add_book()`
+
+#### الشرح بالعربية
+تطلب من المستخدم تفاصيل لإضافة كتاب جديد إلى المكتبة. تقوم بتعيين معرف جديد، وجمع العنوان والمؤلف والفئة والكمية، ثم تحفظ قائمة الكتب المحدثة.
+
+#### Explanation in English
+Prompts the user for details to add a new book to the library. It assigns a new ID, collects title, author, category, and quantity, then saves the updated book list.
+
+---
+
+### `void delete_book()`
+
+#### الشرح بالعربية
+تطلب من المستخدم معرف كتاب وتحذف الكتاب المقابل من سجلات المكتبة، ثم تحفظ قائمة الكتب المحدثة.
+
+#### Explanation in English
+Prompts the user for a book ID and deletes the corresponding book from the library's records, then saves the updated book list.
+
+---
+
+### `void list_all_books()`
+
+#### الشرح بالعربية
+تسمح للمستخدم بتصفح جميع الكتب في عرض مقسم على صفحات، والتنقل بين الصفحات باستخدام 'N' (التالي)، 'P' (السابق)، أو 'Q' (الخروج).
+
+#### Explanation in English
+Allows the user to browse all books in a paginated view, navigating through pages using 'N' (next), 'P' (previous), or 'Q' (quit).
+
+---
+
+### `void add_member()`
+
+#### الشرح بالعربية
+تطلب من المستخدم تفاصيل لإضافة عضو جديد إلى المكتبة. تقوم بتعيين معرف جديد، وجمع الاسم والبريد الإلكتروني وكلمة مرور أولية (التي يتم تشفيرها ووضع علامة عليها لتغيير كلمة المرور عند أول تسجيل دخول)، ثم تحفظ قائمة الأعضاء المحدثة.
+
+#### Explanation in English
+Prompts the user for details to add a new member to the library. It assigns a new ID, collects name, email, and an initial password (which is encrypted and marked for first login password change), then saves the updated member list.
+
+---
+
+### `void delete_member()`
+
+#### الشرح بالعربية
+تطلب من المستخدم معرف عضو وتحذف العضو المقابل من سجلات المكتبة، ثم تحفظ قائمة الأعضاء المحدثة.
+
+#### Explanation in English
+Prompts the user for a member ID and deletes the corresponding member from the library's records, then saves the updated member list.
+
+---
+
+### `void view_all_transactions()`
+
+#### الشرح بالعربية
+تسمح للمسؤول بتصفح جميع معاملات المكتبة في عرض مقسم على صفحات، والتنقل بين الصفحات.
+
+#### Explanation in English
+Allows the admin to browse all library transactions in a paginated view, navigating through pages.
+
+---
+
+### `void reset_member_password()`
+
+#### الشرح بالعربية
+تسمح للمسؤول بإعادة تعيين كلمة مرور عضو. تطلب معرف العضو، وتتحقق من صحة كلمة المرور الجديدة، وتقوم بتشفيرها، وتضع علامة على العضو لتغيير كلمة المرور إلزاميًا عند تسجيل الدخول التالي.
+
+#### Explanation in English
+Allows an admin to reset a member's password. It prompts for the member ID, validates the new password, encrypts it, and marks the member for a mandatory password change on next login.
+
+---
+
+### `void search_books()`
+
+#### الشرح بالعربية
+تسمح للمستخدمين بالبحث عن الكتب حسب العنوان أو المؤلف أو الفئة. تعرض الكتب المطابقة، وتقوم ببحث عن جزء من السلسلة غير حساس لحالة الأحرف.
+
+#### Explanation in English
+Allows users to search for books by title, author, or category. It displays matching books, performing a case-insensitive substring search.
+
+---
+
+### `void borrow_book(int member_id)`
+
+#### الشرح بالعربية
+تسمح للعضو باستعارة كتاب. تعرض الكتب المتاحة مقسمة على صفحات، وتطلب معرف الكتاب، وتنشئ سجل معاملة جديدًا، وتحدث توفر الكتاب، وتحسب تاريخ الاستحقاق.
+
+#### Explanation in English
+Allows a member to borrow a book. It displays available books paginated, prompts for a book ID, creates a new transaction record, updates book availability, and calculates the due date.
+
+---
+
+### `void return_book(int member_id)`
+
+#### الشرح بالعربية
+تسمح للعضو بإرجاع كتاب مستعار. تسرد الكتب المستعارة حاليًا للعضو، وتطلب معرف المعاملة، وتحدث سجل المعاملة بتاريخ الإرجاع، وتحسب أي غرامات تأخير، وتزيد الكمية المتاحة من الكتاب.
+
+#### Explanation in English
+Allows a member to return a borrowed book. It lists the member's currently borrowed books, prompts for a transaction ID, updates the transaction record with the return date, calculates any overdue fines, and increases the book's available quantity.
+
+---
+
+### `void view_my_records(int member_id)`
+
+#### الشرح بالعربية
+تعرض جميع سجلات المعاملات (الكتب المستعارة والمرجعة، بما في ذلك الغرامات) لعضو معين.
+
+#### Explanation in English
+Displays all transaction records (borrowed and returned books, including fines) for a specific member.
+
+---
+
+### `int check_session_timeout()`
+
+#### الشرح بالعربية
+تتحقق مما إذا انتهت صلاحية جلسة المستخدم بسبب عدم النشاط. إذا انتهت الصلاحية، تقوم بتسجيل خروج المستخدم وتعيد 1؛ وإلا، تقوم بتحديث وقت آخر نشاط وتعيد 0.
+
+#### Explanation in English
+Checks if the user's session has timed out due to inactivity. If timed out, it logs out the user and returns 1; otherwise, it updates the last activity time and returns 0.
+
+---
+
+### `void change_password(Member *member, int is_admin)`
+
+#### الشرح بالعربية
+تتعامل مع عملية تغيير كلمة مرور المستخدم، وتفرض متطلبات قوة مختلفة للمسؤولين والأعضاء العاديين. تطلب كلمة مرور جديدة، وتؤكدها، وتقوم بتشفيرها، وتحدث حالة is_first_login للعضو.
+
+#### Explanation in English
+Handles the process of changing a user's password, enforcing different strength requirements for admin and regular members. It prompts for a new password, confirms it, encrypts it, and updates the member's is_first_login status.
+
+---
+
+### `void login()`
+
+#### الشرح بالعربية
+تدير عملية تسجيل دخول المستخدم. تطلب نوع المستخدم (أمين مكتبة/عضو)، واسم المستخدم، وكلمة المرور. تتحقق من صحة البيانات، وتتعامل مع المحاولات الخاطئة، وتعيد التوجيه إلى القائمة المناسبة أو تفرض تغيير كلمة المرور إذا كان هذا هو أول تسجيل دخول.
+
+#### Explanation in English
+Manages the user login process. It prompts for user type (librarian/member), username, and password. It validates credentials, handles incorrect attempts, and redirects to the appropriate menu or forces a password change if it's the first login.
+
+---
+
+### `void admin_menu()`
+
+#### الشرح بالعربية
+تعرض القائمة الرئيسية لأمين المكتبة (المسؤول) وتتعامل مع خياراته، بما في ذلك إدارة الكتب والأعضاء والمعاملات. كما تتحقق من انتهاء صلاحية الجلسة.
+
+#### Explanation in English
+Displays the main menu for the librarian (admin) and handles their choices, including managing books, members, and transactions. It also checks for session timeouts.
+
+---
+
+### `void member_menu(int member_id)`
+
+#### الشرح بالعربية
+تعرض القائمة الرئيسية للعضو المسجل دخوله وتتعامل مع خياراته، بما في ذلك البحث عن الكتب واستعارتها وإرجاعها وعرض سجلاته. كما تتحقق من انتهاء صلاحية الجلسة.
+
+#### Explanation in English
+Displays the main menu for a logged-in member and handles their choices, including searching, borrowing, returning books, and viewing their records. It also checks for session timeouts.
+
+---
+
+### `void initialize_system()`
+
+#### الشرح بالعربية
+تهيئ نظام إدارة المكتبة عن طريق تحميل البيانات من ملفات الكتب والأعضاء والمعاملات. إذا لم يتم العثور على أعضاء، فإنها تنشئ حساب مسؤول افتراضي.
+
+#### Explanation in English
+Initializes the library system by loading data from book, member, and transaction files. If no members are found, it creates a default admin account.
+
+---
+
+### `int main()`
+
+#### الشرح بالعربية
+نقطة الدخول الرئيسية للبرنامج. تقوم بتهيئة النظام، وتمكين معالجة الطرفية الافتراضية (للألوان)، وتقديم قائمة تسجيل الدخول/الخروج الرئيسية، وتدير دورة حياة البرنامج بما في ذلك تحرير الذاكرة المخصصة قبل الخروج.
+
+#### Explanation in English
+The entry point of the program. It initializes the system, enables virtual terminal processing (for colors), presents the main login/exit menu, and manages the program's lifecycle including freeing allocated memory before exiting.
+
+---
+
